@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result — Phishing URL Detector</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .hero {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            padding: 40px 0;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .result-phishing {
+            border-left: 6px solid #dc3545;
+        }
+        .result-safe {
+            border-left: 6px solid #28a745;
+        }
+        .badge-risk {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 13px;
+            margin: 3px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero text-center">
+        <h1 class="display-6 fw-bold">🛡️ Phishing URL Detector</h1>
+        <p class="lead mt-2">Analysis Result</p>
+    </div>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+
+                <!-- Result Card -->
+                <div class="card p-4 mb-4 {% if is_phishing %}result-phishing{% else %}result-safe{% endif %}">
+                    <h5 class="mb-3">Checked URL</h5>
+                    <p class="text-muted text-break">{{ url }}</p>
+
+                    <hr>
+
+                    {% if is_phishing %}
+                    <div class="text-center">
+                        <h2 class="text-danger fw-bold">⚠️ PHISHING DETECTED</h2>
+                        <p class="text-muted">This URL shows signs of being a phishing site.</p>
+                        <span class="badge bg-danger fs-6">Confidence: {{ confidence }}%</span>
+                    </div>
+                    {% else %}
+                    <div class="text-center">
+                        <h2 class="text-success fw-bold">✅ LOOKS SAFE</h2>
+                        <p class="text-muted">No phishing indicators were detected.</p>
+                        <span class="badge bg-success fs-6">Confidence: {{ confidence }}%</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Risk Factors Card -->
+                {% if risk_factors %}
+                <div class="card p-4 mb-4">
+                    <h6 class="fw-bold mb-3">⚠️ Risk Factors Detected ({{ risk_factors|length }})</h6>
+                    <div>
+                        {% for factor in risk_factors %}
+                        <span class="badge-risk">{{ factor }}</span>
+                        {% endfor %}
+                    </div>
+                    <p class="text-muted small mt-3 mb-0">
+                        These are the specific features that triggered a suspicious signal for this URL.
+                    </p>
+                </div>
+                {% endif %}
+
+                <!-- Check Another -->
+                <div class="text-center mt-3">
+                    <a href="/" class="btn btn-dark px-4 py-2">🔍 Check Another URL</a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>
