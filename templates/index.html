@@ -31,6 +31,10 @@
             opacity: 0.9;
             color: white;
         }
+        .btn-check-url:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -57,9 +61,13 @@
                                    placeholder="e.g. https://www.example.com">
                         </div>
                         <div class="text-center">
-                            <button type="submit" class="btn btn-check-url">
+                            <button type="submit" class="btn btn-check-url" id="submitBtn" onclick="showLoading()">
                                 🔍 Check URL
                             </button>
+                            <div id="loadingMsg" style="display:none; margin-top:20px;">
+                                <div class="spinner-border text-secondary" role="status"></div>
+                                <p class="text-muted mt-2">Analyzing URL — checking SSL, DNS, and page content...<br>This may take a few seconds.</p>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -75,5 +83,16 @@
             </div>
         </div>
     </div>
+
+    <script>
+    function showLoading() {
+        const url = document.getElementById('url').value.trim();
+        if (url) {
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').innerText = 'Checking...';
+            document.getElementById('loadingMsg').style.display = 'block';
+        }
+    }
+    </script>
 </body>
 </html>
