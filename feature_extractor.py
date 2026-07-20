@@ -100,9 +100,16 @@ def dnsrecord(url):
 def fetch_page(url):
     """Fetch the page once; return (response, soup) or (None, None) on failure."""
     try:
-        response = requests.get(url, timeout=5, allow_redirects=True,
-                                 headers={'User-Agent': 'Mozilla/5.0'})
-        soup = BeautifulSoup(response.text, 'html.parser')
+        response = requests.get(url, timeout=8, allow_redirects=True,
+                                 headers={'User-Agent': 'Mozilla/5.0'},
+                                 stream=True)
+        # Only read first 200KB to avoid slow downloads on large pages
+        content = b""
+        for chunk in response.iter_content(chunk_size=1024):
+            content += chunk
+            if len(content) > 200000:
+                break
+        soup = BeautifulSoup(content, 'html.parser')
         return response, soup
     except requests.exceptions.RequestException:
         return None, None
