@@ -5,6 +5,9 @@ import os
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 
+import time
+start = time.time()
+
 print("Starting model training...")
 
 # Load dataset
@@ -25,11 +28,11 @@ X = X_full[keep_features]
 
 # Train
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-rf_model = RandomForestClassifier(random_state=42)
+rf_model = RandomForestClassifier(n_estimators=50, random_state=42)
 rf_model.fit(X_train, y_train)
 
 # Save
 os.makedirs('model', exist_ok=True)
 joblib.dump(rf_model, 'model/phishing_model_v2.pkl')
 
-print(f"Model trained and saved. Accuracy: {rf_model.score(X_test, y_test):.4f}")
+print(f"Model trained and saved in {time.time()-start:.1f}s. Accuracy: {rf_model.score(X_test, y_test):.4f}")
