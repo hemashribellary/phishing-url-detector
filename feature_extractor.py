@@ -73,7 +73,7 @@ def sslfinal_state(url):
     hostname = parsed.hostname
     try:
         context = ssl.create_default_context()
-        with socket.create_connection((hostname, 443), timeout=5) as sock:
+        with socket.create_connection((hostname, 443), timeout=3) as sock:
             with context.wrap_socket(sock, server_hostname=hostname) as ssock:
                 cert = ssock.getpeercert()
 
@@ -100,7 +100,7 @@ def dnsrecord(url):
 def fetch_page(url):
     """Fetch the page once; return (response, soup) or (None, None) on failure."""
     try:
-        response = requests.get(url, timeout=8, allow_redirects=True,
+        response = requests.get(url, timeout=5, allow_redirects=True,
                                  headers={'User-Agent': 'Mozilla/5.0'},
                                  stream=True)
         # Only read first 200KB to avoid slow downloads on large pages

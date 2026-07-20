@@ -1,3 +1,5 @@
+
+import signal
 from flask import Flask, render_template, request
 import joblib
 import pandas as pd
@@ -56,8 +58,10 @@ def predict():
     if not url.startswith('http'):
         url = 'http://' + url
 
-    # Extract features
-    features = extract_features(url)
+    try:
+        features = extract_features(url)
+    except Exception as e:
+        return render_template('index.html', error=f"Could not analyze URL: {str(e)}")
 
     # Convert to dataframe in correct order
     df = pd.DataFrame([features])[FEATURE_ORDER]
