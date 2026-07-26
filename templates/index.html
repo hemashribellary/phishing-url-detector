@@ -88,9 +88,17 @@
     function showLoading() {
         const url = document.getElementById('url').value.trim();
         if (url) {
-            document.getElementById('submitBtn').disabled = true;
+            // Show the spinner/text change immediately.
             document.getElementById('submitBtn').innerText = 'Checking...';
             document.getElementById('loadingMsg').style.display = 'block';
+
+            // Disable the button on the NEXT tick, not synchronously in this
+            // handler. Disabling it here directly cancels the form's submit
+            // in Firefox, since the button that triggers submission becomes
+            // inactive before the browser processes the default action.
+            setTimeout(() => {
+                document.getElementById('submitBtn').disabled = true;
+            }, 0);
         }
     }
     </script>
