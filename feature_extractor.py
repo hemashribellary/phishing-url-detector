@@ -1,10 +1,22 @@
 import re
 import ssl
 import socket
+import time
 import requests
 from datetime import datetime
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
+
+# Global fallback timeout for any raw socket call that doesn't set its own
+# (e.g. socket.gethostbyname in dnsrecord()). Without this, DNS lookups on a
+# slow/unresponsive resolver can hang far longer than any timeout= arg we set
+# elsewhere, since gethostbyname() takes no timeout parameter at all.
+socket.setdefaulttimeout(3)
+
+# Hard wall-clock budget (seconds) for the whole network-dependent part of
+# feature extraction. This is what the old code was missing: individual
+# request timeouts only bound the gap between reads, not total elapsed time.
+NETWORK_BUDGET_SECONDS = 6
 
 def having_ip_address(url):
     """Check if the hostname is an IP address."""
@@ -98,17 +110,29 @@ def dnsrecord(url):
         return -1
 
 def fetch_page(url):
-    """Fetch the page once; return (response, soup) or (None, None) on failure."""
+    """Fetch the page once; return (response, soup) or (None, None) on failure.
+
+    Enforces both a per-read timeout (via requests' timeout=) AND a hard
+    wall-clock deadline, since a page that trickles data slowly but steadily
+    can pass every individual read-timeout check while still taking 30-90s+
+    in total. That combination was the actual cause of the Render hang.
+    """
+    deadline = time.monotonic() + NETWORK_BUDGET_SECONDS
     try:
-        response = requests.get(url, timeout=5, allow_redirects=True,
-                                 headers={'User-Agent': 'Mozilla/5.0'},
-                                 stream=True)
-        # Only read first 200KB to avoid slow downloads on large pages
+        response = requests.get(
+            url,
+            timeout=(3, 3),  # (connect timeout, read timeout) in seconds
+            allow_redirects=True,
+            headers={'User-Agent': 'Mozilla/5.0'},
+            stream=True,
+        )
         content = b""
-        for chunk in response.iter_content(chunk_size=1024):
+        for chunk in response.iter_content(chunk_size=4096):
             content += chunk
-            if len(content) > 200000:
+            if len(content) > 50000:  # 50KB is plenty for feature extraction
                 break
+            if time.monotonic() > deadline:
+                break  # hard stop even if the server keeps sending data
         soup = BeautifulSoup(content, 'html.parser')
         return response, soup
     except requests.exceptions.RequestException:
