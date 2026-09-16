@@ -7,15 +7,12 @@ from datetime import datetime
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
-# Global fallback timeout for any raw socket call that doesn't set its own
-# (e.g. socket.gethostbyname in dnsrecord()). Without this, DNS lookups on a
-# slow/unresponsive resolver can hang far longer than any timeout= arg we set
-# elsewhere, since gethostbyname() takes no timeout parameter at all.
+# gethostbyname() doesn't take a timeout arg at all, so set one globally
+# or a slow DNS server can hang the whole request
 socket.setdefaulttimeout(3)
 
-# Hard wall-clock budget (seconds) for the whole network-dependent part of
-# feature extraction. This is what the old code was missing: individual
-# request timeouts only bound the gap between reads, not total elapsed time.
+# per-chunk timeout wasn't enough - a page sending data slowly but steadily
+# never triggers it, so cap the total time too
 NETWORK_BUDGET_SECONDS = 6
 
 def having_ip_address(url):
@@ -112,11 +109,9 @@ def dnsrecord(url):
 def fetch_page(url):
     """Fetch the page once; return (response, soup) or (None, None) on failure.
 
-    Enforces both a per-read timeout (via requests' timeout=) AND a hard
-    wall-clock deadline, since a page that trickles data slowly but steadily
-    can pass every individual read-timeout check while still taking 30-90s+
-    in total. That combination was the actual cause of the Render hang.
-    """
+Times out both per-chunk and on total elapsed time - a slow-but-steady
+page was still hanging past 30s even with the per-read timeout alone.
+"""
     deadline = time.monotonic() + NETWORK_BUDGET_SECONDS
     try:
         response = requests.get(
