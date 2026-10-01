@@ -1,24 +1,37 @@
 # Phishing URL Detector
 
-A web app that checks if a URL looks like a phishing site or a safe one, and explains why. Built with Python, scikit-learn, and Flask, deployed live on Render.
+A web app that checks if a URL looks like a phishing site or a safe one, and shows the red flags it found. Built with Python, scikit-learn, and Flask, deployed live on Render.
 
 ![Phishing detector result page showing risk factors](image.png)
 
-Live demo: https://phishing-url-detector-oey4.onrender.com (Free tier, sleeps when unused, first load takes 30-60 sec)
+**Live demo:** https://phishing-url-detector-oey4.onrender.com
+(Free Render tier, so it sleeps when unused and the first load takes 30-60 seconds.)
 
-**Why I built this:** Wanted something you could actually use, not just a notebook that prints an accuracy score.
+**Why I built this:** I wanted something you could actually use, not just a notebook that prints an accuracy score.
 
-**What it does**
-* Checks 22 things about a URL: SSL certificate, where links point, IP-address tricks, and more
-* Random Forest model, trained on 11,000+ real websites
+## What it does
+
+* Checks 22 features of a URL: SSL certificate, where links point, IP-address tricks, and more
 * Returns a confidence % and the exact red flags triggered, not just yes/no
 
-**Tech:** Python, Flask, scikit-learn, pandas, BeautifulSoup, Bootstrap 5, Render/gunicorn
+## Tech stack
 
-**The model:** 95.3% accuracy, catches 93/100 real phishing sites. Started with 30 dataset features but 8 depended on APIs that no longer exist (like Google PageRank), so I dropped those and retrained on the 22 I could actually compute live. Accuracy dropped slightly, from 96.7% to 95.3%, but now it works on real URLs. Biggest factors: SSL validity (32.6%) and link destinations (24.6%).
+Python, Flask, scikit-learn, pandas, BeautifulSoup, Bootstrap 5, gunicorn. Deployed on Render.
 
-**Known limitation:** dead/broken URLs sometimes default to "looks safe" since there's no evidence found, when really it just couldn't check. Found this in testing, documenting it honestly rather than rushing a fix.
+## The model
 
-**Debugging note:** Site would randomly hang. Assumed server timeout, fixed backend stuff, but the real bug was that JS was disabling the submit button too early, silently killing form submission in Firefox. Found it by checking server logs (empty) then the browser network tab (request never sent). Lesson: check both ends.
+Random Forest trained on the UCI Phishing Websites dataset (11,055 labeled sites). On the held-out test set it reaches 95.3% accuracy and catches 889 of 956 phishing sites (93%), missing 67.
 
-Built by a 12th grader still learning. Feedback welcome.
+The dataset has 30 features, but 8 of them depended on services I couldn't use anymore (like Google PageRank). I dropped those and retrained on the 22 I could compute from a live URL. Accuracy went from 96.7% to 95.3%. The biggest factors were SSL validity (32.6%) and where the page's links point (24.6%).
+
+These numbers are from the dataset's test split. I haven't measured accuracy on fresh live URLs.
+
+## Known limitation
+
+Dead or broken URLs sometimes come back as "looks safe", because no evidence was found when really the check failed.
+
+## Debugging note
+
+The site would randomly hang. I assumed a server timeout and fixed backend stuff, but the real bug was JavaScript disabling the submit button too early, which silently killed form submission in Firefox. I found it by checking the server logs (empty), then the browser network tab (request never sent). Lesson: check both ends.
+
+Built by a 12th grader in Bengaluru.
